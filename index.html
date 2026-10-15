@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>브랜드 규칙 저장소</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #333; min-height: 100vh; }
+.container { max-width: 900px; margin: 0 auto; padding: 20px; }
+h1 { text-align: center; margin-bottom: 20px; color: #2c3e50; font-size: 1.8em; }
+.section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.section h2 { margin-bottom: 15px; color: #2c3e50; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #1abc9c; }
+.color-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.color-input { display: flex; align-items: center; gap: 8px; }
+.color-input input[type="color"] { width: 50px; height: 40px; border: none; border-radius: 8px; cursor: pointer; }
+.color-input input[type="text"] { width: 100px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+.btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+.btn-primary { background: #1abc9c; color: #fff; }
+.btn-primary:hover { background: #16a085; }
+.btn-secondary { background: #3498db; color: #fff; }
+.btn-secondary:hover { background: #2980b9; }
+.btn-danger { background: #e74c3c; color: #fff; }
+.btn-danger:hover { background: #c0392b; }
+.btn-group { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.preview-section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.preview-section h2 { margin-bottom: 15px; color: #2c3e50; }
+.brand-preview { border: 2px solid #ecf0f1; border-radius: 12px; padding: 30px; text-align: center; position: relative; min-height: 200px; }
+.preview-title { font-weight: 700; margin-bottom: 10px; }
+.preview-subtitle { font-size: 14px; margin-bottom: 20px; }
+.preview-content { font-size: 14px; line-height: 1.6; }
+.preview-logo { position: absolute; font-size: 24px; }
+.preview-footer { margin-top: 20px; font-size: 12px; }
+.saved-list { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.saved-list h2 { margin-bottom: 15px; color: #2c3e50; }
+.saved-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f0f0f0; }
+.saved-item:last-child { border-bottom: none; }
+.saved-item-name { font-weight: 600; font-size: 14px; }
+.saved-item-date { font-size: 12px; color: #95a5a6; }
+.saved-item-actions { display: flex; gap: 8px; }
+.saved-item-actions button { padding: 6px 12px; font-size: 12px; }
+.prompt-output { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 13px; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+.empty-state { text-align: center; padding: 30px; color: #95a5a6; }
+@media (max-width: 600px) { .container { padding: 10px; } h1 { font-size: 1.4em; } .btn-group { flex-direction: column; } .btn { width: 100%; } .color-row { flex-direction: column; } }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🎨 브랜드 규칙 저장소</h1>
+
+<div class="section">
+<h2>📝 브랜드 규칙 입력</h2>
+<div class="form-group">
+<label for="brandName">브랜드 이름</label>
+<input type="text" id="brandName" placeholder="예: 10조 스튜디오">
+</div>
+<div class="form-group">
+<label>브랜드 색상</label>
+<div class="color-row">
+<div class="color-input">
+<input type="color" id="primaryColor" value="#1abc9c" onchange="updatePreview()">
+<input type="text" id="primaryColorText" value="#1abc9c" onchange="syncColor('primary')">
+<span>Primary</span>
+</div>
+<div class="color-input">
+<input type="color" id="secondaryColor" value="#3498db" onchange="updatePreview()">
+<input type="text" id="secondaryColorText" value="#3498db" onchange="syncColor('secondary')">
+<span>Secondary</span>
+</div>
+<div class="color-input">
+<input type="color" id="accentColor" value="#e74c3c" onchange="updatePreview()">
+<input type="text" id="accentColorText" value="#e74c3c" onchange="syncColor('accent')">
+<span>Accent</span>
+</div>
+</div>
+</div>
+<div class="form-group">
+<label for="fontFamily">폰트</label>
+<select id="fontFamily" onchange="updatePreview()">
+<option value="sans-serif">Sans-serif (고딕)</option>
+<option value="serif">Serif (명조)</option>
+<option value="'Courier New', monospace">Monospace</option>
+<option value="'Segoe UI', sans-serif">Segoe UI</option>
+<option value="'Apple SD Gothic Neo', sans-serif">Apple SD Gothic</option>
+</select>
+</div>
+<div class="form-group">
+<label for="titleSize">제목 크기</label>
+<select id="titleSize" onchange="updatePreview()">
+<option value="1.5em">보통 (1.5em)</option>
+<option value="2em">큰 (2em)</option>
+<option value="2.5em">아주 큰 (2.5em)</option>
+<option value="1.2em">작은 (1.2em)</option>
+</select>
+</div>
+<div class="form-group">
+<label for="logoPosition">로고 위치</label>
+<select id="logoPosition" onchange="updatePreview()">
+<option value="top-left">상단 왼쪽</option>
+<option value="top-center">상단 중앙</option>
+<option value="top-right">상단 오른쪽</option>
+<option value="bottom-left">하단 왼쪽</option>
+<option value="bottom-center">하단 중앙</option>
+<option value="bottom-right">하단 오른쪽</option>
+</select>
+</div>
+<div class="form-group">
+<label for="endingStyle">마무리 형식</label>
+<select id="endingStyle" onchange="updatePreview()">
+<option value="contact">연락처 표시</option>
+<option value="slogan">슬로건 표시</option>
+<option value="social">소셜 미디어 링크</option>
+<option value="none">없음</option>
+</select>
+</div>
+<div class="btn-group">
+<button class="btn btn-primary" onclick="saveBrand()">저장</button>
+<button class="btn btn-secondary" onclick="generatePrompt()">프롬프트 생성</button>
+<button class="btn btn-danger" onclick="clearForm()">초기화</button>
+</div>
+</div>
+
+<div class="preview-section">
+<h2>👁️ 미리보기</h2>
+<div class="brand-preview" id="brandPreview">
+<div class="preview-logo" id="previewLogo">🏢</div>
+<div class="preview-title" id="previewTitle">브랜드 제목</div>
+<div class="preview-subtitle" id="previewSubtitle">브랜드 부제목</div>
+<div class="preview-content" id="previewContent">여기에 콘텐츠가 표시됩니다.</div>
+<div class="preview-footer" id="previewFooter">© 2026 브랜드. All rights reserved.</div>
+</div>
+</div>
+
+<div class="section" id="promptSection" style="display:none;">
+<h2>🤖 AI에게 붙여넣을 프롬프트</h2>
+<div class="prompt-output" id="promptOutput"></div>
+<div class="btn-group">
+<button class="btn btn-primary" onclick="copyPrompt()">클립보드 복사</button>
+</div>
+</div>
+
+<div class="saved-list" id="savedList">
+<h2>💾 저장된 브랜드 규칙</h2>
+<div id="savedListContainer"></div>
+</div>
+</div>
+
+<script>
+const STORAGE_KEY = 'brand-rule-vault-sets';
+
+function loadBrands() {
+try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+catch { return []; }
+}
+
+function saveBrands(brands) {
+localStorage.setItem(STORAGE_KEY, JSON.stringify(brands));
+}
+
+function saveBrand() {
+const name = document.getElementById('brandName').value.trim();
+if (!name) { alert('브랜드 이름을 입력해주세요.'); return; }
+
+const brand = {
+id: Date.now(),
+name: name,
+primaryColor: document.getElementById('primaryColor').value,
+secondaryColor: document.getElementById('secondaryColor').value,
+accentColor: document.getElementById('accentColor').value,
+fontFamily: document.getElementById('fontFamily').value,
+titleSize: document.getElementById('titleSize').value,
+logoPosition: document.getElementById('logoPosition').value,
+endingStyle: document.getElementById('endingStyle').value,
+createdAt: new Date().toLocaleString('ko-KR')
+};
+
+const brands = loadBrands();
+brands.push(brand);
+saveBrands(brands);
+renderSavedList();
+alert(`"${name}" 브랜드가 저장되었습니다!`);
+}
+
+function deleteBrand(id) {
+if (!confirm('이 브랜드 규칙을 삭제하시겠습니까?')) return;
+const brands = loadBrands().filter(b => b.id !== id);
+saveBrands(brands);
+renderSavedList();
+}
+
+function loadBrand(id) {
+const brand = loadBrands().find(b => b.id === id);
+if (!brand) return;
+
+document.getElementById('brandName').value = brand.name;
+document.getElementById('primaryColor').value = brand.primaryColor;
+document.getElementById('primaryColorText').value = brand.primaryColor;
+document.getElementById('secondaryColor').value = brand.secondaryColor;
+document.getElementById('secondaryColorText').value = brand.secondaryColor;
+document.getElementById('accentColor').value = brand.accentColor;
+document.getElementById('accentColorText').value = brand.accentColor;
+document.getElementById('fontFamily').value = brand.fontFamily;
+document.getElementById('titleSize').value = brand.titleSize;
+document.getElementById('logoPosition').value = brand.logoPosition;
+document.getElementById('endingStyle').value = brand.endingStyle;
+
+updatePreview();
+}
+
+function updatePreview() {
+const primary = document.getElementById('primaryColor').value;
+const secondary = document.getElementById('secondaryColor').value;
+const accent = document.getElementById('accentColor').value;
+const fontFamily = document.getElementById('fontFamily').value;
+const titleSize = document.getElementById('titleSize').value;
+const logoPosition = document.getElementById('logoPosition').value;
+const endingStyle = document.getElementById('endingStyle').value;
+const brandName = document.getElementById('brandName').value || '브랜드 제목';
+
+const preview = document.getElementById('brandPreview');
+preview.style.fontFamily = fontFamily;
+preview.style.borderColor = primary;
+
+document.getElementById('previewTitle').textContent = brandName;
+document.getElementById('previewTitle').style.fontSize = titleSize;
+document.getElementById('previewTitle').style.color = primary;
+
+document.getElementById('previewSubtitle').textContent = '브랜드 부제목 슬로건';
+document.getElementById('previewSubtitle').style.color = secondary;
+
+document.getElementById('previewContent').textContent = '여기에 콘텐츠가 표시됩니다. 브랜드 규칙에 따라 스타일이 적용됩니다.';
+document.getElementById('previewContent').style.color = '#333';
+
+// Logo position
+const logo = document.getElementById('previewLogo');
+const positions = {
+'top-left': { top: '10px', left: '10px' },
+'top-center': { top: '10px', left: '50%', transform: 'translateX(-50%)' },
+'top-right': { top: '10px', right: '10px' },
+'bottom-left': { bottom: '10px', left: '10px' },
+'bottom-center': { bottom: '10px', left: '50%', transform: 'translateX(-50%)' },
+'bottom-right': { bottom: '10px', right: '10px' }
+};
+const pos = positions[logoPosition] || positions['top-left'];
+logo.style.top = pos.top || 'auto';
+logo.style.left = pos.left || 'auto';
+logo.style.right = pos.right || 'auto';
+logo.style.bottom = pos.bottom || 'auto';
+logo.style.transform = pos.transform || 'none';
+
+// Footer
+const footer = document.getElementById('previewFooter');
+if (endingStyle === 'contact') {
+footer.textContent = '📧 contact@brand.com | 📞 02-1234-5678';
+} else if (endingStyle === 'slogan') {
+footer.textContent = '"우리의 슬로건을 여기에 입력하세요"';
+} else if (endingStyle === 'social') {
+footer.textContent = '🐦 Twitter | 📘 Instagram | 💼 LinkedIn';
+} else {
+footer.textContent = '© 2026 브랜드. All rights reserved.';
+}
+footer.style.color = accent;
+}
+
+function syncColor(type) {
+const textInput = document.getElementById(type + 'ColorText');
+const colorInput = document.getElementById(type + 'Color');
+colorInput.value = textInput.value;
+updatePreview();
+}
+
+function generatePrompt() {
+const name = document.getElementById('brandName').value.trim() || '브랜드';
+const primary = document.getElementById('primaryColor').value;
+const secondary = document.getElementById('secondaryColor').value;
+const accent = document.getElementById('accentColor').value;
+const fontFamily = document.getElementById('fontFamily').value;
+const titleSize = document.getElementById('titleSize').value;
+const logoPosition = document.getElementById('logoPosition').value;
+const endingStyle = document.getElementById('endingStyle').value;
+
+const fontLabel = {
+'sans-serif': '고딕체',
+'serif': '명조체',
+"'Courier New', monospace": "고정폭 글꼴",
+"'Segoe UI', sans-serif": "Segoe UI",
+"'Apple SD Gothic Neo', sans-serif": "Apple SD Gothic Neo"
+};
+
+const positionLabel = {
+'top-left': '상단 왼쪽',
+'top-center': '상단 중앙',
+'top-right': '상단 오른쪽',
+'bottom-left': '하단 왼쪽',
+'bottom-center': '하단 중앙',
+'bottom-right': '하단 오른쪽'
+};
+
+const endingLabel = {
+'contact': '연락처 표시',
+'slogan': '슬로건 표시',
+'social': '소셜 미디어 링크 표시',
+'none': '표시 없음'
+};
+
+const prompt = `[${name} 브랜드 디자인 가이드]
+
+## 색상
+- Primary: ${primary} (제목, 강조 요소)
+- Secondary: ${secondary} (부제목, 보조 요소)
+- Accent: ${accent} (마무리 요소, 경고)
+
+## 타이포그래피
+- 폰트: ${fontLabel[fontFamily] || fontFamily}
+- 제목 크기: ${titleSize}
+
+## 레이아웃
+- 로고 위치: ${positionLabel[logoPosition] || logoPosition}
+- 마무리 형식: ${endingLabel[endingStyle] || endingStyle}
+
+## 적용 규칙
+1. 제목은 Primary 색상, ${titleSize} 크기 사용
+2. 부제목은 Secondary 색상 사용
+3. 모든 텍스트는 ${fontLabel[fontFamily] || fontFamily} 폰트 사용
+4. 로고는 ${positionLabel[logoPosition] || logoPosition}에 배치
+5. 마무리 영역은 ${endingLabel[endingStyle] || endingStyle} 형식으로 표시
+
+이 규칙을 모든 발표자료, 문서, 웹 페이지에 일관되게 적용해주세요.`;
+
+document.getElementById('promptOutput').textContent = prompt;
+document.getElementById('promptSection').style.display = 'block';
+}
+
+function copyPrompt() {
+const text = document.getElementById('promptOutput').textContent;
+if (!text) { alert('프롬프트를 먼저 생성해주세요.'); return; }
+navigator.clipboard.writeText(text).then(() => {
+alert('클립보드에 복사되었습니다!');
+}).catch(() => {
+const textarea = document.createElement('textarea');
+textarea.value = text;
+document.body.appendChild(textarea);
+textarea.select();
+document.execCommand('copy');
+document.body.removeChild(textarea);
+alert('클립보드에 복사되었습니다!');
+});
+}
+
+function renderSavedList() {
+const brands = loadBrands();
+const container = document.getElementById('savedListContainer');
+if (brands.length === 0) {
+container.innerHTML = '<div class="empty-state">저장된 브랜드 규칙이 없습니다.</div>';
+return;
+}
+container.innerHTML = brands.map(b => `
+<div class="saved-item">
+<div>
+<div class="saved-item-name">${escapeHtml(b.name)}</div>
+<div class="saved-item-date">${b.createdAt}</div>
+</div>
+<div class="saved-item-actions">
+<button class="btn btn-secondary" onclick="loadBrand(${b.id})">불러오기</button>
+<button class="btn btn-danger" onclick="deleteBrand(${b.id})">삭제</button>
+</div>
+</div>
+`).join('');
+}
+
+function clearForm() {
+document.getElementById('brandName').value = '';
+document.getElementById('primaryColor').value = '#1abc9c';
+document.getElementById('primaryColorText').value = '#1abc9c';
+document.getElementById('secondaryColor').value = '#3498db';
+document.getElementById('secondaryColorText').value = '#3498db';
+document.getElementById('accentColor').value = '#e74c3c';
+document.getElementById('accentColorText').value = '#e74c3c';
+document.getElementById('fontFamily').value = 'sans-serif';
+document.getElementById('titleSize').value = '1.5em';
+document.getElementById('logoPosition').value = 'top-left';
+document.getElementById('endingStyle').value = 'contact';
+document.getElementById('promptSection').style.display = 'none';
+updatePreview();
+}
+
+function escapeHtml(text) {
+const div = document.createElement('div');
+div.textContent = text;
+return div.innerHTML;
+}
+
+// Initialize
+updatePreview();
+renderSavedList();
+</script>
+</body>
+</html>
